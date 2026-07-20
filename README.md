@@ -1,4 +1,6 @@
 # YOLO Trainer
+简介在哔哩哔哩！点击链接看使用教程！
+https://t.bilibili.com/1224874155447418889?share_source=pc_native
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
