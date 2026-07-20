@@ -1,6 +1,6 @@
 # YOLO Trainer
 简介在哔哩哔哩！点击链接看使用教程！
-https://t.bilibili.com/1224874155447418889?share_source=pc_native
+【不会视觉检测？嫌Yolo训练太麻烦？我为你们带来了一站式训练工具！小白瞬间上手！】 https://www.bilibili.com/video/BV1N9Nt6zE7o/?share_source=copy_web&vd_source=6f709a4591475a827d8f0e8b3cbfc39f
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
