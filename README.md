@@ -45,7 +45,7 @@ https://youtu.be/f5tu9Om_j8g
 
 ### 方式一：直接使用（推荐）
 
-1. 下载 [Releases](https://github.com/your-username/yolo-trainer/releases) 中的 `YOLO-Trainer.zip`
+下载releases中的 `YOLO-Trainer.zip`
 2. 解压后双击 `第一次启动先点此文件！！！！！.bat` 安装依赖
 3. 双击 `YOLO-Trainer.exe` 启动
 
@@ -53,7 +53,7 @@ https://youtu.be/f5tu9Om_j8g
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-username/yolo-trainer.git
+git clone https://github.com/wjijifujiji-sys/yolo-trainer.git
 cd yolo-trainer
 
 # 安装依赖
