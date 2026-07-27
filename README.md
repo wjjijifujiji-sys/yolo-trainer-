@@ -142,3 +142,8 @@ yolo-trainer/
 
 - [Ultralytics](https://github.com/ultralytics/ultralytics) - YOLO 模型实现
 - [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) - GUI 框架
+- 
+<img width="2098" height="1320" alt="image" src="https://github.com/user-attachments/assets/13e0aff5-f58a-486b-8a03-39c32a24e0c9" />
+<img width="2103" height="1322" alt="image" src="https://github.com/user-attachments/assets/0c101c75-e9f3-4800-a313-12b073bb98c4" />
+<img width="2102" height="1325" alt="image" src="https://github.com/user-attachments/assets/6679fcd9-72e6-45a9-9f05-abbd7ea69e04" />
+<img width="2103" height="1320" alt="image" src="https://github.com/user-attachments/assets/ea58da73-8d05-40f9-9f5f-2ae66195b205" />
