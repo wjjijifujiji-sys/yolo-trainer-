@@ -1,42 +1,48 @@
 # YOLO Trainer
+
 简介在哔哩哔哩！点击链接看使用教程！
-【不会视觉检测？嫌Yolo训练太麻烦？我为你们带来了一站式训练工具！小白瞬间上手！】 https://www.bilibili.com/video/BV1N9Nt6zE7o/?share_source=copy_web&vd_source=6f709a4591475a827d8f0e8b3cbfc39f
+【不会视觉检测？嫌Yolo训练太麻烦？我为你们带来了一站式训练工具！小白瞬间上手！】 https://www.bilibili.com/video/BV1N9Nt6zE7o/?share\_source=copy\_web\&vd\_source=6f709a4591475a827d8f0e8b3cbfc39f
 
 and YouTube
-https://youtu.be/f5tu9Om_j8g
-![Python](https://img.shields.io/badge/Python-3.10+-blue)
-![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
-![License](https://img.shields.io/badge/License-MIT-green)
+https://youtu.be/f5tu9Om\_j8g
+!\[Python](https://img.shields.io/badge/Python-3.10+-blue)
+!\[Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
+!\[License](https://img.shields.io/badge/License-MIT-green)
 
 > 一站式 YOLO 目标检测工具：视频抽帧 → 图片标注 → 模型训练 → 目标检测
 
 ## 功能
 
 ### 视频抽帧
-- 支持 MP4/AVI/MOV/MKV 等格式
-- 4种抽帧模式：按帧率、按间隔、场景变化检测、运动检测
-- 实时预览，拖拽支持
+
+* 支持 MP4/AVI/MOV/MKV 等格式
+* 4种抽帧模式：按帧率、按间隔、场景变化检测、运动检测
+* 实时预览，拖拽支持
 
 ### 图片标注
-- 鼠标拖拽绘制矩形标注框
-- 多类别管理
-- 一键导出 YOLO 格式数据集（自动划分 train/val）
+
+* 鼠标拖拽绘制矩形标注框
+* 多类别管理
+* 一键导出 YOLO 格式数据集（自动划分 train/val）
 
 ### 模型训练
-- 支持 YOLOv8 / YOLO11 全系列（n/s/m/l/x）
-- GPU/CPU 自动检测，支持 CUDA 加速
-- 可调参数：Epochs、Batch Size、Image Size、Device
+
+* 支持 YOLOv8 / YOLO11 全系列（n/s/m/l/x）
+* GPU/CPU 自动检测，支持 CUDA 加速
+* 可调参数：Epochs、Batch Size、Image Size、Device
 
 ### 目标检测
-- 支持图片、视频、摄像头实时检测
-- 可调置信度和 IoU 阈值
-- 导出 CSV 检测结果
-- 保存标注后的图片/视频
+
+* 支持图片、视频、摄像头实时检测
+* 可调置信度和 IoU 阈值
+* 导出 CSV 检测结果
+* 保存标注后的图片/视频
 
 ### 其他
-- 中英文双语界面
-- 深色主题，现代 UI 设计
-- 开箱即用，无需配置环境
+
+* 中英文双语界面
+* 深色主题，现代 UI 设计
+* 开箱即用，无需配置环境
 
 ## 快速开始
 
@@ -74,13 +80,13 @@ python main.py
 
 ## 支持的模型
 
-| 模型 | 参数量 | 推荐场景 |
-|------|--------|----------|
-| yolov8n / yolo11n /yolo26n | ~3M | 快速训练、边缘部署 |
-| yolov8s / yolo11s /yolo26s | ~11M | 平衡速度与精度 |
-| yolov8m / yolo11m /yolo26m | ~25M | 中等规模数据集 |
-| yolov8l / yolo11l /yolo26l | ~43M | 高精度需求 |
-| yolov8x / yolo11x /yolo26x | ~68M | 最高精度 |
+|模型|参数量|推荐场景|
+|-|-|-|
+|yolov8n / yolo11n /yolo26n|\~3M|快速训练、边缘部署|
+|yolov8s / yolo11s /yolo26s|\~11M|平衡速度与精度|
+|yolov8m / yolo11m /yolo26m|\~25M|中等规模数据集|
+|yolov8l / yolo11l /yolo26l|\~43M|高精度需求|
+|yolov8x / yolo11x /yolo26x|\~68M|最高精度|
 
 ## GPU 支持
 
@@ -89,7 +95,8 @@ python main.py
 1. 安装 [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads)
 2. 安装 [cuDNN](https://developer.nvidia.com/cudnn)
 3. 安装 PyTorch with CUDA：
-   ```bash
+
+```bash
    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
    ```
 
@@ -113,26 +120,26 @@ yolo-trainer/
 ├── requirements.txt     # Python 依赖
 ├── 启动.bat             # Windows 启动脚本
 ├── ui/                  # 界面模块
-│   ├── main_window.py   # 主窗口
-│   ├── extract_page.py  # 视频抽帧页面
-│   ├── annotate_page.py # 图片标注页面
-│   ├── detect_page.py   # 目标检测页面
-│   ├── train_page.py    # 模型训练页面
+│   ├── main\_window.py   # 主窗口
+│   ├── extract\_page.py  # 视频抽帧页面
+│   ├── annotate\_page.py # 图片标注页面
+│   ├── detect\_page.py   # 目标检测页面
+│   ├── train\_page.py    # 模型训练页面
 │   └── components.py    # 通用组件
 ├── utils/               # 工具模块
 │   ├── annotations.py   # 标注管理
-│   ├── dataset_parser.py # 数据集解析
+│   ├── dataset\_parser.py # 数据集解析
 │   └── i18n.py          # 国际化
 └── tools/               # 模型权重（需自行下载）
 ```
 
 ## 依赖
 
-- PyQt6 >= 6.6.0
-- ultralytics >= 8.0.0
-- Pillow >= 10.0.0
-- tqdm >= 4.65.0
-- opencv-python >= 4.8.0
+* PyQt6 >= 6.6.0
+* ultralytics >= 8.0.0
+* Pillow >= 10.0.0
+* tqdm >= 4.65.0
+* opencv-python >= 4.8.0
 
 ## 许可证
 
@@ -140,9 +147,6 @@ yolo-trainer/
 
 ## 致谢
 
-- [Ultralytics](https://github.com/ultralytics/ultralytics) - YOLO 模型实现
-- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) - GUI 框架
-<img width="2098" height="1320" alt="image" src="https://github.com/user-attachments/assets/13e0aff5-f58a-486b-8a03-39c32a24e0c9" />
-<img width="2103" height="1322" alt="image" src="https://github.com/user-attachments/assets/0c101c75-e9f3-4800-a313-12b073bb98c4" />
-<img width="2102" height="1325" alt="image" src="https://github.com/user-attachments/assets/6679fcd9-72e6-45a9-9f05-abbd7ea69e04" />
-<img width="2103" height="1320" alt="image" src="https://github.com/user-attachments/assets/ea58da73-8d05-40f9-9f5f-2ae66195b205" />
+* [Ultralytics](https://github.com/ultralytics/ultralytics) - YOLO 模型实现
+* [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) - GUI 框架
+
