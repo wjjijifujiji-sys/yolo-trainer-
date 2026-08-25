@@ -76,11 +76,11 @@ python main.py
 
 | 模型 | 参数量 | 推荐场景 |
 |------|--------|----------|
-| yolov8n / yolo11n | ~3M | 快速训练、边缘部署 |
-| yolov8s / yolo11s | ~11M | 平衡速度与精度 |
-| yolov8m / yolo11m | ~25M | 中等规模数据集 |
-| yolov8l / yolo11l | ~43M | 高精度需求 |
-| yolov8x / yolo11x | ~68M | 最高精度 |
+| yolov8n / yolo11n /yolo26n | ~3M | 快速训练、边缘部署 |
+| yolov8s / yolo11s /yolo26s | ~11M | 平衡速度与精度 |
+| yolov8m / yolo11m /yolo26m | ~25M | 中等规模数据集 |
+| yolov8l / yolo11l /yolo26l | ~43M | 高精度需求 |
+| yolov8x / yolo11x /yolo26x | ~68M | 最高精度 |
 
 ## GPU 支持
 
