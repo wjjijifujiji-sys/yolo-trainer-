@@ -4,11 +4,7 @@
 【不会视觉检测？嫌Yolo训练太麻烦？我为你们带来了一站式训练工具！小白瞬间上手！】 https://www.bilibili.com/video/BV1N9Nt6zE7o/?share\_source=copy\_web\&vd\_source=6f709a4591475a827d8f0e8b3cbfc39f
 
 and YouTube
-https://youtu.be/f5tu9Om\_j8g
-!\[Python](https://img.shields.io/badge/Python-3.10+-blue)
-!\[Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
-!\[License](https://img.shields.io/badge/License-MIT-green)
-
+https://youtu.be/f5tu9Om_j8g?si=isIzqQwKu2uVoIUV
 > 一站式 YOLO 目标检测工具：视频抽帧 → 图片标注 → 模型训练 → 目标检测
 
 ## 功能
