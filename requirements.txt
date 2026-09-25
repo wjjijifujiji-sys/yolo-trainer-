@@ -4,3 +4,4 @@ opencv-python>=4.8.0
 numpy>=1.24.0
 Pillow>=10.0.0
 tqdm>=4.65.0
+mss>=9.0.0

@@ -12,8 +12,7 @@ from PyQt6.QtWidgets import (
     QFrame,
 )
 from PyQt6.QtCore import Qt, QRectF, pyqtSignal as Signal
-from PyQt6.QtGui import QPixmap, QPen, QColor, QFont, QPainter
-
+from PyQt6.QtGui import QPixmap, QPen, QColor, QFont, QPainter, QShortcut, QKeySequence
 from ui.components import styled_button
 from utils.annotations import Annotation, AnnotationManager
 from utils.i18n import t
@@ -90,7 +89,7 @@ class AnnotationCanvas(QGraphicsView):
         ]
         color = QColor(colors[class_id % len(colors)])
         pen = QPen(color, 2)
-        self.scene().addRect(rect, pen)
+        rect_item = self.scene().addRect(rect, pen)
         label = categories[class_id] if class_id < len(categories) else str(class_id)
 
         bg = QColor(color)
@@ -100,6 +99,12 @@ class AnnotationCanvas(QGraphicsView):
         text_item.setFont(QFont("Microsoft YaHei UI", 9, QFont.Weight.Bold))
         text_item.setPos(rect.left(), rect.top() - 22)
         self.scene().addItem(text_item)
+
+        return rect_item, text_item
+
+    def remove_rect_pair(self, rect_item, text_item):
+        self.scene().removeItem(rect_item)
+        self.scene().removeItem(text_item)
 
     def clear_rects(self):
         for item in list(self.scene().items()):
@@ -141,8 +146,21 @@ class AnnotatePage(QWidget):
         self._current_image_dir = None
         self._current_filename = None
 
+        self._undo_stack = []
+        self._redo_stack = []
         self._setup_ui()
         self._refresh_category_combo()
+        # Keyboard shortcuts​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​​‌‌​​‌‌‌​‌​‌
+        self._save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+        self._save_shortcut.activated.connect(self._save_annotations)
+        self._prev_shortcut = QShortcut(QKeySequence("A"), self)
+        self._prev_shortcut.activated.connect(self._prev_image)
+        self._next_shortcut = QShortcut(QKeySequence("D"), self)
+        self._next_shortcut.activated.connect(self._next_image)
+        self._undo_shortcut = QShortcut(QKeySequence("Ctrl+Z"), self)
+        self._undo_shortcut.activated.connect(self._undo)
+        self._redo_shortcut = QShortcut(QKeySequence("Ctrl+Y"), self)
+        self._redo_shortcut.activated.connect(self._redo)
 
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
@@ -159,9 +177,9 @@ class AnnotatePage(QWidget):
 
         toolbar.addSpacing(16)
 
-        cat_label = QLabel(t("class_list") + ":")
-        cat_label.setObjectName("sectionTitleSmall")
-        toolbar.addWidget(cat_label)
+        self.cat_label = QLabel(t("class_list") + ":")
+        self.cat_label.setObjectName("sectionTitleSmall")
+        toolbar.addWidget(self.cat_label)
 
         self.cat_combo = QComboBox()
         self.cat_combo.setMinimumWidth(120)
@@ -216,6 +234,10 @@ class AnnotatePage(QWidget):
         self.delete_btn.setEnabled(False)
         self.delete_btn.clicked.connect(self._delete_current)
         nav.addWidget(self.delete_btn)
+
+        self.tips_label = QLabel("Tips: A/D 切换图片 (prev/next) | Ctrl+Z 撤销 (undo) | Ctrl+Y 重做 (redo) | Ctrl+S 保存 (save)")
+        self.tips_label.setObjectName("hint")
+        nav.addWidget(self.tips_label)
 
         nav.addStretch()
 
@@ -280,9 +302,9 @@ class AnnotatePage(QWidget):
         export_bar = QHBoxLayout()
         export_bar.setSpacing(8)
 
-        ratio_label = QLabel(t("val_ratio"))
-        ratio_label.setObjectName("sectionTitleSmall")
-        export_bar.addWidget(ratio_label)
+        self.ratio_label = QLabel(t("val_ratio"))
+        self.ratio_label.setObjectName("sectionTitleSmall")
+        export_bar.addWidget(self.ratio_label)
 
         self.val_ratio_spin = QSpinBox()
         self.val_ratio_spin.setRange(5, 50)
@@ -300,6 +322,13 @@ class AnnotatePage(QWidget):
         self.export_btn.setEnabled(False)
         self.export_btn.clicked.connect(self._export_yolo)
         export_bar.addWidget(self.export_btn)
+
+        self.save_history_btn = styled_button(t("save_history"), "#22c55e", 13)
+        self.save_history_btn.setMinimumWidth(140)
+        self.save_history_btn.setMinimumHeight(42)
+        self.save_history_btn.setEnabled(False)
+        self.save_history_btn.clicked.connect(self._save_annotations)
+        export_bar.addWidget(self.save_history_btn)
         main_layout.addLayout(export_bar)
 
     # ─── i18n ───
@@ -314,7 +343,10 @@ class AnnotatePage(QWidget):
         self.del_cat_btn.setText(t("remove"))
         self.del_ann_btn.setText(t("delete_selected"))
         self.clear_ann_btn.setText(t("clear_all"))
-        # Section labels
+        self.save_history_btn.setText(t("save_history"))
+        self.cat_label.setText(t("class_list") + ":")
+        self.ratio_label.setText(t("val_ratio"))
+        # Section labels​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​‌​‌​​‌‌​‌​​‌​‌​‌‌‌‌‌​‌‌​​​‌​
         for lbl in self.findChildren(QLabel):
             if lbl.text() in ("类别列表", "Classes", "当前图片标注", "Annotations"):
                 if lbl.text() in ("类别列表", "Classes"):
@@ -371,6 +403,28 @@ class AnnotatePage(QWidget):
             QMessageBox.warning(self, t("title"), t("no_image"))
             return
 
+        # Check for existing annotation data in the folder
+        ann_file = self._current_image_dir / "annotations.json"
+        if ann_file.exists():
+            # Create a temporary manager to check how many images are annotated
+            try:
+                temp_mgr = AnnotationManager.load_from_json(str(ann_file))
+                annotated_count = len([img for img in temp_mgr.annotations if any(
+                    (self._current_image_dir / img).exists() for _ in [1]
+                ) and temp_mgr.annotations[img]])
+                if annotated_count > 0:
+                    reply = QMessageBox.question(
+                        self, t("title"),
+                        f"{t('resume_annotation')}\n\n{annotated_count}/{len(self._image_files)} images annotated",
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    )
+                    if reply == QMessageBox.StandardButton.Yes:
+                        self.manager = temp_mgr
+                        self._refresh_category_combo()
+                        self._refresh_cat_list()
+            except Exception:
+                pass  # Corrupted file, proceed fresh
+
         self._current_image_idx = 0
         self._enable_navigation(True)
         self._load_current_image()
@@ -380,6 +434,7 @@ class AnnotatePage(QWidget):
         self.next_btn.setEnabled(enabled)
         self.delete_btn.setEnabled(enabled)
         self.export_btn.setEnabled(enabled)
+        self.save_history_btn.setEnabled(enabled)
 
     def _load_current_image(self):
         if not self._image_files:
@@ -424,14 +479,18 @@ class AnnotatePage(QWidget):
                 self._current_image_idx = len(self._image_files) - 1
             self._load_current_image()
 
-    # ─── Drawing interaction ───
+    # ─── Drawing interaction ───​‌‌‌‌​​‌​‌​‌‌‌‌‌​​‌​​​​​‌‌‌​​‌‌‌‌​​​‌‌‌​‌​​​‌​‌‌
 
     def _on_rect_drawn(self, rect):
+        if not self.manager.categories:
+            QMessageBox.warning(self, t("title"), t("no_category"))
+            return
         class_id = self.cat_combo.currentIndex()
-        if class_id >= len(self.manager.categories):
+        if class_id < 0 or class_id >= len(self.manager.categories):
             QMessageBox.warning(self, t("title"), t("no_category"))
             return
 
+        self._record_state()
         ann = Annotation(
             class_id=class_id,
             x=rect.x(), y=rect.y(), w=rect.width(), h=rect.height(),
@@ -443,6 +502,7 @@ class AnnotatePage(QWidget):
     # ─── Annotation list ───
 
     def _restore_annotations(self):
+        self.canvas.clear_rects()
         anns = self.manager.get_annotations(self._current_filename)
         for ann in anns:
             rect = QRectF(ann.x, ann.y, ann.w, ann.h)
@@ -469,6 +529,7 @@ class AnnotatePage(QWidget):
     def _remove_annotation_at(self, index):
         anns = self.manager.get_annotations(self._current_filename)
         if 0 <= index < len(anns):
+            self._record_state()
             anns.pop(index)
             self.manager.annotations[self._current_filename] = anns
             self._restore_annotations()
@@ -476,11 +537,62 @@ class AnnotatePage(QWidget):
 
     def _clear_current_annotations(self):
         if self._current_filename:
+            self._record_state()
             self.manager.annotations.pop(self._current_filename, None)
             self.canvas.clear_rects()
             img_path = self._image_files[self._current_image_idx]
             self.canvas.load_image(str(img_path))
             self._refresh_annotation_list()
+
+    # ─── Undo / Redo ───‌‌‌​​‌​​‌​‌‌‌‌‌‌‌​​​‌​‌​‌‌‌​​‌‌​‌​​‌‌‌​‌‌​‌‌​​​​
+
+    def _record_state(self):
+        anns = self.manager.get_annotations(self._current_filename)
+        self._undo_stack.append((self._current_filename, anns))
+        self._redo_stack.clear()
+
+    def _undo(self):
+        if not self._undo_stack:
+            return
+        fname, state = self._undo_stack.pop()
+        self._redo_stack.append((fname, self.manager.get_annotations(fname)))
+        if fname:
+            self.manager.annotations[fname] = state
+        if fname == self._current_filename:
+            self._restore_annotations()
+            self._refresh_annotation_list()
+
+    def _redo(self):
+        if not self._redo_stack:
+            return
+        fname, state = self._redo_stack.pop()
+        self._undo_stack.append((fname, self.manager.get_annotations(fname)))
+        if fname:
+            self.manager.annotations[fname] = state
+        if fname == self._current_filename:
+            self._restore_annotations()
+            self._refresh_annotation_list()
+
+    # ─── Save / Resume ───
+
+    def _save_annotations(self):
+        if not self._current_image_dir:
+            return
+        ann_file = self._current_image_dir / "annotations.json"
+        self.manager.save_to_json(str(ann_file))
+        # Show brief save confirmation
+        from PyQt6.QtCore import QTimer
+        from PyQt6.QtWidgets import QLabel as ToastLabel
+        toast = ToastLabel("Saved!", self)
+        toast.setStyleSheet(
+            "background: #22c55e; color: #fff; padding: 6px 16px; "
+            "border-radius: 6px; font-size: 13px; font-weight: bold;"
+        )
+        toast.adjustSize()
+        # Position at bottom-center of the page
+        toast.move(self.width() // 2 - toast.width() // 2, self.height() - 60)
+        toast.show()
+        QTimer.singleShot(1500, toast.deleteLater)
 
     # ─── Export ───
 
@@ -491,6 +603,9 @@ class AnnotatePage(QWidget):
         if not self.manager.categories:
             QMessageBox.warning(self, t("title"), t("no_category"))
             return
+
+        # Auto-save annotations before export
+        self._save_annotations()
 
         out_folder = QFileDialog.getExistingDirectory(self, t("export_yolo"))
         if not out_folder:
@@ -510,3 +625,4 @@ class AnnotatePage(QWidget):
             )
         except Exception as e:
             QMessageBox.critical(self, t("export_fail"), str(e))
+#唧唧复唧唧著

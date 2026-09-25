@@ -13,12 +13,12 @@ from PyQt6.QtWidgets import (
     QRadioButton, QButtonGroup,
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QPixmap, QImage, QFont
+from PyQt6.QtGui import QPixmap, QImage
 
 from ui.components import styled_button
 from utils.i18n import t
 
-# Import extractor class (inline to avoid separate module)
+# Import extractor class (inline to avoid separate module)​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​​‌‌​​‌‌‌​‌​‌
 import time
 from PyQt6.QtCore import QThread
 
@@ -74,6 +74,11 @@ class FrameExtractor(QThread):
             os.makedirs(self.output_dir, exist_ok=True)
             self.log.emit(f"Output: {self.output_dir}")
 
+            # 用视频名做前缀，多个视频抽到同一文件夹互不覆盖
+            video_stem = os.path.splitext(os.path.basename(self.video_path))[0]
+            for ch in '\\/:*?"<>|':
+                video_stem = video_stem.replace(ch, '_')
+
             start_time = time.time()
             count = 0
             frame_idx = 0
@@ -126,7 +131,7 @@ class FrameExtractor(QThread):
 
                 if should_save:
                     count += 1
-                    filename = f"frame_{count:06d}.{self.output_format}"
+                    filename = f"{video_stem}-{count}.{self.output_format}"
                     filepath = os.path.join(self.output_dir, filename)
                     try:
                         if self.output_format == "jpg":
@@ -261,9 +266,9 @@ class ExtractPage(QWidget):
         settings = QHBoxLayout()
         settings.setSpacing(12)
 
-        # Mode selection
-        mode_group = QGroupBox(t("extract_mode"))
-        mode_layout = QVBoxLayout(mode_group)
+        # Mode selection​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​‌​‌​​‌‌​‌​​‌​‌​‌‌‌‌‌​‌‌​​​‌​
+        self.mode_group_box = QGroupBox(t("extract_mode"))
+        mode_layout = QVBoxLayout(self.mode_group_box)
 
         self.mode_group = QButtonGroup()
         self.mode_fps = QRadioButton(t("mode_fps"))
@@ -282,11 +287,12 @@ class ExtractPage(QWidget):
         mode_layout.addWidget(self.mode_scene)
         mode_layout.addWidget(self.mode_motion)
         self.mode_group.idClicked.connect(self._on_mode_changed)
-        settings.addWidget(mode_group)
+        self.mode_group_box.setLayout(mode_layout)
+        settings.addWidget(self.mode_group_box)
 
         # Parameters
-        param_group = QGroupBox(t("params"))
-        param_layout = QVBoxLayout(param_group)
+        self.param_group_box = QGroupBox(t("params"))
+        param_layout = QVBoxLayout(self.param_group_box)
 
         # FPS param
         fps_row = QHBoxLayout()
@@ -305,7 +311,7 @@ class ExtractPage(QWidget):
         fps_row.addStretch()
         param_layout.addLayout(fps_row)
 
-        # Interval param
+        # Interval param​‌‌‌‌​​‌​‌​‌‌‌‌‌​​‌​​​​​‌‌‌​​‌‌‌‌​​​‌‌‌​‌​​​‌​‌‌
         self.interval_widget = QWidget()
         iw = QHBoxLayout(self.interval_widget)
         iw.setContentsMargins(0, 0, 0, 0)
@@ -369,18 +375,18 @@ class ExtractPage(QWidget):
         # Output format
         fmt_row = QHBoxLayout()
         fmt_row.setSpacing(8)
-        fmt_label = QLabel(t("format"))
-        fmt_label.setMinimumWidth(70)
-        fmt_row.addWidget(fmt_label)
+        self.fmt_label = QLabel(t("format"))
+        self.fmt_label.setMinimumWidth(70)
+        fmt_row.addWidget(self.fmt_label)
         self.format_combo = QComboBox()
         self.format_combo.addItems(["jpg", "png"])
         self.format_combo.setCurrentText("jpg")
         self.format_combo.setMaximumWidth(80)
         fmt_row.addWidget(self.format_combo)
 
-        qual_label = QLabel(t("quality"))
-        qual_label.setMinimumWidth(40)
-        fmt_row.addWidget(qual_label)
+        self.qual_label = QLabel(t("quality"))
+        self.qual_label.setMinimumWidth(40)
+        fmt_row.addWidget(self.qual_label)
         self.quality_spin = QSpinBox()
         self.quality_spin.setRange(1, 100)
         self.quality_spin.setValue(95)
@@ -390,11 +396,11 @@ class ExtractPage(QWidget):
         fmt_row.addStretch()
         param_layout.addLayout(fmt_row)
 
-        settings.addWidget(param_group, 1)
+        settings.addWidget(self.param_group_box, 1)
 
-        # Output & action
-        action_group = QGroupBox(t("output"))
-        action_layout = QVBoxLayout(action_group)
+        # Output & action‌‌‌​​‌​​‌​‌‌‌‌‌‌‌​​​‌​‌​‌‌‌​​‌‌​‌​​‌‌‌​‌‌​‌‌​​​​
+        self.action_group_box = QGroupBox(t("output"))
+        action_layout = QVBoxLayout(self.action_group_box)
 
         out_row = QHBoxLayout()
         out_row.setSpacing(8)
@@ -421,7 +427,7 @@ class ExtractPage(QWidget):
         self.stop_btn.clicked.connect(self._stop_extract)
         action_layout.addWidget(self.stop_btn)
 
-        settings.addWidget(action_group)
+        settings.addWidget(self.action_group_box)
 
         layout.addLayout(settings)
 
@@ -445,6 +451,23 @@ class ExtractPage(QWidget):
     # ─── i18n ───
 
     def retranslate(self):
+        self.mode_group_box.setTitle(t("extract_mode"))
+        self.param_group_box.setTitle(t("params"))
+        self.action_group_box.setTitle(t("output"))
+        self.mode_fps.setText(t("mode_fps"))
+        self.mode_interval.setText(t("mode_interval"))
+        self.mode_scene.setText(t("mode_scene"))
+        self.mode_motion.setText(t("mode_motion"))
+        self.fps_label.setText(t("fps_per_sec"))
+        self.fps_spin.setSuffix(t("unit_frames"))
+        self.interval_label.setText(t("every_n_sec"))
+        self.interval_spin.setSuffix(t("unit_sec_per_frame"))
+        self.scene_label.setText(t("sensitivity"))
+        self.scene_hint.setText(t("higher_less"))
+        self.motion_label.setText(t("sensitivity"))
+        self.motion_hint.setText(t("higher_less"))
+        self.fmt_label.setText(t("format"))
+        self.qual_label.setText(t("quality"))
         self.browse_btn.setText(t("select_video"))
         self.extract_btn.setText(t("start_extract"))
         self.stop_btn.setText(t("stop"))
@@ -455,7 +478,7 @@ class ExtractPage(QWidget):
             self.out_label.setText(t("no_output_dir"))
         if self.status_label.text() in ("就绪", "Ready"):
             self.status_label.setText(t("ready"))
-        if self.preview_label.text() in ("拖放视频文件到此处，或点击「选择视频」", "Drop video here or click Browse"):
+        if self.preview_label.text() in ("拖放视频文件到此处，或点击「选择视频」", "Drop video here or click Select Video"):
             self.preview_label.setText(t("drag_video_hint"))
 
     def _on_mode_changed(self, mode_id):
@@ -478,7 +501,7 @@ class ExtractPage(QWidget):
         info = VideoInfo.get_info(filepath)
         if "error" in info:
             from PyQt6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, "Error", info["error"])
+            QMessageBox.warning(self, t("error_prefix").rstrip(": "), info["error"])
             return
 
         self._video_info = info
@@ -613,3 +636,4 @@ class ExtractPage(QWidget):
             if path.suffix.lower() in {'.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm'}:
                 self._load_video(str(path))
                 return
+#唧唧复唧唧著

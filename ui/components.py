@@ -1,11 +1,10 @@
 """Shared UI components - styled buttons, widgets."""
 
-from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QVBoxLayout
-from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtProperty, QSize
-from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtProperty
 
 
-# ─── Global Stylesheet ───
+# ─── Global Stylesheet ───​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​​‌‌​​‌‌‌​‌​‌
 
 STYLESHEET = """
 QMainWindow {
@@ -14,6 +13,11 @@ QMainWindow {
 QWidget {
     font-family: "Microsoft YaHei UI", "Segoe UI", sans-serif;
     color: #e5e7eb;
+}
+
+/* ── Global override for QMessageBox (light text on light bg) ── */
+QMessageBox {
+    color: #1f2937;
 }
 
 /* ── Tab Bar ── */
@@ -173,6 +177,29 @@ QComboBox QAbstractItemView {
     selection-color: #fff;
 }
 
+/* ── LineEdit (RTSP / credentials) ── */
+QLineEdit {
+    background: #1f2937;
+    color: #e5e7eb;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    selection-background-color: #f97316;
+    selection-color: #fff;
+}
+QLineEdit:hover {
+    border-color: #f97316;
+}
+QLineEdit:focus {
+    border-color: #f97316;
+    color: #f97316;
+}
+QLineEdit:disabled {
+    background: #111827;
+    color: #6b7280;
+}
+
 /* ── SpinBox ── */
 QSpinBox, QDoubleSpinBox {
     background: #1f2937;
@@ -206,6 +233,27 @@ QSpinBox::up-arrow, QDoubleSpinBox::up-arrow,
 QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
     image: none;
     border: none;
+}
+
+/* ── CheckBox ── */
+QCheckBox {
+    color: #e5e7eb;
+    font-size: 13px;
+    spacing: 8px;
+}
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #374151;
+    border-radius: 4px;
+    background: #1f2937;
+}
+QCheckBox::indicator:checked {
+    background: #f97316;
+    border-color: #f97316;
+}
+QCheckBox::indicator:hover {
+    border-color: #f97316;
 }
 
 /* ── ProgressBar ── */
@@ -251,6 +299,73 @@ QLabel#sectionTitleSmall {
 QLabel#hint {
     color: #6b7280;
     font-size: 12px;
+}
+
+/* ── Message Box (light themed) ── */
+QMessageBox {
+    color: #1f2937;
+    background: #fff;
+    font-size: 13px;
+}
+QMessageBox QLabel, QMessageBox QProgressBar, QMessageBox QLineEdit, QMessageBox QComboBox {
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+QMessageBox QLineEdit {
+    background: #fff;
+    border: 1px solid #d1d5db;
+}
+QMessageBox QPushButton {
+    background: #f97316;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: bold;
+}
+QMessageBox QPushButton:hover {
+    background: #fb923c;
+}
+QMessageBox QPushButton:pressed {
+    background: #ea580c;
+}
+QMessageBox QPushButton[flashing="false"], QMessageBox QPushButton[statictext="yes"] {
+    background: #e5e7eb;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+}
+QMessageBox QPushButton[flashing="false"]:hover, QMessageBox QPushButton[statictext="yes"]:hover {
+    background: #d1d5db;
+}
+/* QInputDialog specific - the input field and its buttons */
+QInputDialog QLabel {
+    color: #1f2937;
+    background: transparent;
+}
+QInputDialog QLineEdit {
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+/* Force OK/Cancel button style in all dialogs */
+QMessageBox QPushButton, QInputDialog QPushButton,
+QMessageBox#qt_msgbox_buttonbox QPushButton {
+    background: #f3f4f6;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 6px 16px;
+    font-size: 13px;
+    min-width: 60px;
+}
+QMessageBox QPushButton:hover, QInputDialog QPushButton:hover {
+    background: #e5e7eb;
 }
 """
 
@@ -325,3 +440,6 @@ class HoverButton(QPushButton):
         self._anim.setEasingCurve(QEasingCurve.Type.OutBack)
         self._anim.start()
         super().mouseReleaseEvent(event)
+#唧唧复唧唧著​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​‌​‌​​‌‌​‌​​‌​‌​‌‌‌‌‌​‌‌​​​‌​
+# ​‌‌‌‌​​‌​‌​‌‌‌‌‌​​‌​​​​​‌‌‌​​‌‌‌‌​​​‌‌‌​‌​​​‌​‌‌
+# ‌‌‌​​‌​​‌​‌‌‌‌‌‌‌​​​‌​‌​‌‌‌​​‌‌​‌​​‌‌‌​‌‌​‌‌​​​​

@@ -3,7 +3,7 @@ chcp 65001 >nul
 cd /d "%~dp0"
 
 echo ========================================
-echo   YOLO Trainer
+echo   YOLO Trainer---jijifujiji_sys
 echo ========================================
 echo.
 

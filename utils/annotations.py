@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import os
+import json
+import random
 import shutil
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
@@ -32,7 +32,7 @@ class AnnotationManager:
 
     def __init__(self) -> None:
         self.categories: list[str] = []
-        # key=image filename, value=list of Annotation
+        # key=image filename, value=list of Annotation​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​​‌‌​​‌‌‌​‌​‌
         self.annotations: dict[str, list[Annotation]] = {}
 
     # ---- Category management ----
@@ -47,11 +47,19 @@ class AnnotationManager:
     def remove_category(self, index: int) -> bool:
         if 0 <= index < len(self.categories):
             self.categories.pop(index)
-            # Re-index annotations
-            for img_anns in self.annotations.values():
-                for a in img_anns:
+            # Drop annotations of the removed class; re-index the rest​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​‌​‌​​‌‌​‌​​‌​‌​‌‌‌‌‌​‌‌​​​‌​
+            for img_name in list(self.annotations.keys()):
+                kept = []
+                for a in self.annotations[img_name]:
+                    if a.class_id == index:
+                        continue  # belonged to removed class
                     if a.class_id > index:
                         a.class_id -= 1
+                    kept.append(a)
+                if kept:
+                    self.annotations[img_name] = kept
+                else:
+                    self.annotations.pop(img_name, None)
             return True
         return False
 
@@ -82,6 +90,38 @@ class AnnotationManager:
     def clear_current(self, filename: str) -> None:
         self.annotations.pop(filename, None)
 
+    # ---- JSON persistence ----
+
+    def save_to_json(self, filepath: str) -> None:
+        """Save current annotations to a JSON file."""
+        data = {
+            "categories": self.categories,
+            "annotations": {
+                img_name: [asdict(a) for a in anns]
+                for img_name, anns in self.annotations.items() if anns
+            },
+        }
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    @classmethod
+    def load_from_json(cls, filepath: str) -> "AnnotationManager":
+        """Load annotations from a JSON file. Returns a new AnnotationManager."""
+        manager = cls()
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        manager.categories = list(data.get("categories", []))
+        raw_anns = data.get("annotations", {})
+        for img_name, ann_list in raw_anns.items():
+            for a in ann_list:
+                manager.add_annotation(img_name, Annotation(**a))
+        return manager
+
+    @property
+    def has_saved_data(self) -> bool:
+        """Check if there is any annotation data loaded (images annotated)."""
+        return len(self.categories) > 0 and len([v for v in self.annotations.values() if v]) > 0
+
     # ---- Export ----
 
     def export_yolo(self, image_folder: str, output_dir: str, val_ratio: float = 0.2) -> str:
@@ -102,38 +142,33 @@ class AnnotationManager:
         if not all_images:
             raise ValueError(f"No supported images found in {image_folder}")
 
-        # Split train/val
+        # Split train/val (random, reproducible; stratified so every class appears in val)​‌‌‌‌​​‌​‌​‌‌‌‌‌​​‌​​​​​‌‌‌​​‌‌‌‌​​​‌‌‌​‌​​​‌​‌‌
+        rng = random.Random(42)
         n_val = max(1, int(len(all_images) * val_ratio))
-        train_images = all_images[:-n_val] if n_val else all_images
-        val_images = all_images[-n_val:] if n_val else []
+        by_class: dict[int, list] = {}
+        for img in all_images:
+            anns = self.annotations.get(img.name, [])
+            if anns:
+                by_class.setdefault(anns[0].class_id, []).append(img)
+            else:
+                by_class.setdefault(-1, []).append(img)
+        val_set: set[Path] = set()
+        remaining = []
+        for cls_id, imgs in by_class.items():
+            rng.shuffle(imgs)
+            take = max(1, int(len(imgs) * val_ratio)) if cls_id != -1 else 0
+            val_set.update(imgs[:take])
+            remaining.extend(imgs[take:])
+        if len(val_set) < n_val:
+            rng.shuffle(remaining)
+            val_set.update(remaining[: n_val - len(val_set)])
+        train_images = [img for img in all_images if img not in val_set]
+        val_images = [img for img in all_images if img in val_set]
 
         # Create output dirs
         for split in ("train", "val"):
             (dst / "images" / split).mkdir(parents=True, exist_ok=True)
             (dst / "labels" / split).mkdir(parents=True, exist_ok=True)
-
-        def export_split(images: list[Path], split: str) -> None:
-            for img in images:
-                # Copy image
-                shutil.copy2(img, dst / "images" / split / img.name)
-
-                # Export annotations
-                txt_name = img.with_suffix(".txt").name
-                anns = self.annotations.get(img.name, [])
-                label_path = dst / "labels" / split / txt_name
-                img_w = img.width if hasattr(img, "width") else 0
-                # Need actual image dimensions
-                try:
-                    from PIL import Image as PILImage
-                    with PILImage.open(img) as pil:
-                        img_w, img_h = pil.size
-                except Exception:
-                    img_h = 0
-
-                with open(label_path, "w") as f:
-                    for ann in anns:
-                        if img_w > 0 and img_h > 0:
-                            f.write(ann.to_yolo_line(img_w, img_h))
 
         # We need actual image dims, so do it properly
         from PIL import Image as PILImage
@@ -165,3 +200,4 @@ class AnnotationManager:
         yaml_path = dst / "dataset.yaml"
         yaml_path.write_text("\n".join(yaml_lines), encoding="utf-8")
         return str(yaml_path)
+#唧唧复唧唧著‌‌‌​​‌​​‌​‌‌‌‌‌‌‌​​​‌​‌​‌‌‌​​‌‌​‌​​‌‌‌​‌‌​‌‌​​​​

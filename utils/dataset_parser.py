@@ -1,6 +1,5 @@
 """Dataset parser - handles YOLO txt and COCO json formats"""
 
-import json
 from pathlib import Path
 from collections import Counter
 
@@ -68,7 +67,7 @@ class DatasetParser:
             result["classes"] = []
             result["class_distribution"] = {}
 
-        # Check for YAML config
+        # Check for YAML config​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​​‌‌​​‌‌‌​‌​‌
         coco_yaml = dataset_path / "dataset.yaml"
         if not coco_yaml.exists():
             coco_yaml = dataset_path / "coco.yaml"
@@ -76,7 +75,7 @@ class DatasetParser:
             result["config_file"] = str(coco_yaml)
             result["format"] = "yaml_config"
 
-        # Validation
+        # Validation​‌‌​‌​‌​​‌‌​‌​​‌​‌‌​‌​‌​​‌‌​‌​​‌​‌​‌‌‌‌‌​‌‌​​​‌​
         if result["total_images"] == 0:
             result["valid"] = False
             result["error"] = "No images found. Expected folder structure:"
@@ -98,7 +97,7 @@ class DatasetParser:
         train_img = images_path / "train"
         val_img = images_path / "val" if (images_path / "val").exists() else train_img
 
-        # Use relative paths for compatibility
+        # Use relative paths for compatibility​‌‌‌‌​​‌​‌​‌‌‌‌‌​​‌​​​​​‌‌‌​​‌‌‌‌​​​‌‌‌​‌​​​‌​‌‌
         rel_train = train_img.relative_to(dataset_path)
         rel_val = val_img.relative_to(dataset_path)
 
@@ -111,3 +110,4 @@ class DatasetParser:
         yaml_path = dataset_path / "dataset.yaml"
         yaml_path.write_text(yaml_content, encoding="utf-8")
         return str(yaml_path)
+#唧唧复唧唧著‌‌‌​​‌​​‌​‌‌‌‌‌‌‌​​​‌​‌​‌‌‌​​‌‌​‌​​‌‌‌​‌‌​‌‌​​​​
